@@ -1,0 +1,30 @@
+trigger:
+- main
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+varaibles:
+  buildConfiguration: 'Release'
+  backedFolder: 'src/backend/'
+
+steps:
+- task: useDotNet@2
+  displayName: 'Install .NET SDK'
+  inputs:
+    version: 8.x
+
+- script: dotnet restore
+  workingDirectory: '$(backendFolder)'
+  displayName: 'Restore NuGet Packages'
+
+- script: dotnet build --configuration $(buildConfiguration)
+  workingDirectory: '$(backendFolder)'
+  displayName: 'Build Backend'
+
+- task: DotNetCoreCLI@2
+  displayName: 'Run Unit Tests'
+  inputs:
+    command: 'test'
+    projects: '$(backendFolder)/**/*Tests/*.csproj'
+    arguments: '--configuration $(buildConfiguration)'

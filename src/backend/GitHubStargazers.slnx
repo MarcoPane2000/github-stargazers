@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="GitHubStargazers.Tests/GitHubStargazers.Tests.csproj" />
+  <Project Path="GitHubStargazers.WebApi/GitHubStargazers.WebApi.csproj" />
+</Solution>

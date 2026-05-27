@@ -1,0 +1,10 @@
+# React
+node_modules/
+dist/
+.env.local
+
+# .NET
+bin/
+obj/
+.vs/
+*.user
