@@ -8,3 +8,9 @@ bin/
 obj/
 .vs/
 *.user
+appsettings.json
+
+# SQLite
+*.db
+*.db-shm
+*.db-wal
