@@ -5,10 +5,15 @@ pool:
   vmImage: 'ubuntu-latest'
 
 variables:
-  buildConfiguration: 'Release'
-  azureWebAppName: 'github-stargazers-webapi'
-  webApiProject: 'src/backend/GitHubStargazers.WebApi/*.csproj'
-  testProject: 'src/backend/GitHubStargazers.Tests/*.csproj'
+  - name: buildConfiguration
+    value: 'Release'
+  - name: azureWebAppName
+    value: 'github-stargazers-webapi'
+  - name: webApiProject
+    value: 'src/backend/GitHubStargazers.WebApi/*.csproj'
+  - name: testProject
+    value: 'src/backend/GitHubStargazers.Tests/*.csproj'
+  - group: stargazers-secrets 
 
 stages:
 - stage: BuildAndTest
@@ -29,6 +34,10 @@ stages:
         command: 'test'
         projects: '$(testProject)'
         arguments: '--configuration $(buildConfiguration)'
+      env:
+        Jwt:Issuer: $(Jwt__Issuer)
+        Jwt:Key: $(Jwt__Key)
+        GitHubSettings:Token: $(GitHubSettings__Token)
 
     # Publish WebApi
     - task: DotNetCoreCLI@2
@@ -61,12 +70,13 @@ stages:
         downloadType: 'single'
         artifactName: 'drop'
         downloadPath: '$(System.ArtifactsDirectory)'
+        
     - task: AzureRmWebAppDeployment@5
       inputs:
         ConnectionType: 'AzureRM'
         azureSubscription: 'Azure subscription 1(4057d1da-e109-4ad4-8f44-43cbfbf20647)'
         appType: 'webAppLinux'
         WebAppName: 'github-stargazers-webapi'
-        packageForLinux: '$(System.DefaultWorkingDirectory)/**/*.zip'
+        packageForLinux: '$(System.ArtifactsDirectory)/drop/**/*.zip'
         RuntimeStack: 'DOTNETCORE|10.0'
         DeploymentTypeLinux: 'oneDeploy'
