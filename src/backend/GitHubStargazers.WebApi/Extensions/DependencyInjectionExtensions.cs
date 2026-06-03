@@ -20,7 +20,7 @@ public static class DependencyInjectionExtensions
         services.AddDbContext<DataContext>(options =>
             options.UseSqlite("Data Source=github_stargazers.db"));
 
-        // services.AddHttpClient<IGitHubService, GitHubService>();
+        services.AddHttpClient<IGitHubService, GitHubService>();
 
         services.AddValidatorsFromAssemblyContaining<Program>();
         services.AddOpenApi();
@@ -39,8 +39,7 @@ public static class DependencyInjectionExtensions
 
     public static IServiceCollection AddAppSecurity(this IServiceCollection services, IConfiguration configuration)
     {
-        var jwtSettings = configuration.GetSection("Jwt");
-        var key = Encoding.ASCII.GetBytes(jwtSettings["Key"]!);
+        var key = Encoding.ASCII.GetBytes(configuration["Jwt:Key"]!);
 
         services.AddAuthentication(options =>
         {
@@ -55,8 +54,8 @@ public static class DependencyInjectionExtensions
                 ValidateAudience = true,
                 ValidateLifetime = true,
                 ValidateIssuerSigningKey = true,
-                ValidIssuer = jwtSettings["Issuer"],
-                ValidAudience = jwtSettings["Audience"],
+                ValidIssuer = configuration["Jwt:Issuer"]!,
+                ValidAudience = configuration["Jwt:Audience"]!,
                 IssuerSigningKey = new SymmetricSecurityKey(key)
             };
             options.Events = new JwtBearerEvents
@@ -131,6 +130,8 @@ public static class DependencyInjectionExtensions
     public static WebApplication MapEndpoints(this WebApplication app)
     {
         app.MapAuthEndpoints();
+
+        app.MapGitHubEndpoints();
 
         return app;
     }
