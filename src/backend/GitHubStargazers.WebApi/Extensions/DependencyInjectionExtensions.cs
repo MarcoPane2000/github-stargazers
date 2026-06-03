@@ -17,8 +17,9 @@ public static class DependencyInjectionExtensions
         services.AddExceptionHandler<Middlewares.GlobalExceptionHandler>();
         services.AddProblemDetails();
 
+        string dbConnectionString = configuration.GetConnectionString("DefaultConnection") ?? "Data Source=github_stargazers.db";
         services.AddDbContext<DataContext>(options =>
-            options.UseSqlite("Data Source=github_stargazers.db"));
+            options.UseSqlite(dbConnectionString));
 
         services.AddHttpClient<IGitHubService, GitHubService>();
 
