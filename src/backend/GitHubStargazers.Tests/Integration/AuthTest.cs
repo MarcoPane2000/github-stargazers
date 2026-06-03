@@ -16,7 +16,7 @@ namespace GitHubStargazers.IntegrationTests;
 public class AuthScenarioTests : IClassFixture<WebApplicationFactory<Program>>
 {
     private readonly HttpClient _client;
-    // private readonly Mock<IGitHubService> _gitHubServiceMock = new();
+    private readonly Mock<IGitHubService> _gitHubServiceMock = new();
 
     public AuthScenarioTests(WebApplicationFactory<Program> factory)
     {
@@ -38,11 +38,11 @@ public class AuthScenarioTests : IClassFixture<WebApplicationFactory<Program>>
                     options.UseSqlite(sqliteConnection);
                 });
 
-                // _gitHubServiceMock
-                //     .Setup(s => s.SearchReposAsync(It.IsAny<string>()))
-                //     .Returns(Task.FromResult(new List<GitHubUserRepoResponse>()));
+                _gitHubServiceMock
+                    .Setup(s => s.SearchReposAsync(It.IsAny<string>()))
+                    .Returns(Task.FromResult(new List<GitHubUserRepoResponse>()));
 
-                // services.AddSingleton(_gitHubServiceMock.Object);
+                services.AddSingleton(_gitHubServiceMock.Object);
             });
         });
 
@@ -87,8 +87,8 @@ public class AuthScenarioTests : IClassFixture<WebApplicationFactory<Program>>
         loginResponse.Headers.Contains("Set-Cookie").Should().BeTrue();
 
         // 3. Access to auth protected route
-        // var protectedResponse = await _client.GetAsync("/api/stargazers/repos/torvalds");
-        // protectedResponse.StatusCode.Should().Be(HttpStatusCode.OK);
+        var protectedResponse = await _client.GetAsync("/api/stargazers/repos/torvalds");
+        protectedResponse.StatusCode.Should().Be(HttpStatusCode.OK);
 
         // 4. Refresh
         var refreshResponse = await _client.PostAsync("/api/auth/refresh", null);
@@ -100,7 +100,7 @@ public class AuthScenarioTests : IClassFixture<WebApplicationFactory<Program>>
         logoutResponse.StatusCode.Should().Be(HttpStatusCode.OK);
 
         // 6. Fail access to auth protected route
-        // var finalProtectedResponse = await _client.GetAsync("/api/stargazers/repos/torvalds");
-        // finalProtectedResponse.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+        var finalProtectedResponse = await _client.GetAsync("/api/stargazers/repos/torvalds");
+        finalProtectedResponse.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
     }
 }

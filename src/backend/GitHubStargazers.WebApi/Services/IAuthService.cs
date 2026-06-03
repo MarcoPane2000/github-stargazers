@@ -1,5 +1,4 @@
 using GitHubStargazers.WebApi.Dtos;
-using GitHubStargazers.WebApi.Models;
 
 namespace GitHubStargazers.WebApi.Services;
 
