@@ -1,0 +1,31 @@
+trigger:
+  branches:
+    include:
+      - main
+  paths:
+    include:
+      - src/frontend/*
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+variables:
+  - name: azureStaticWebApp
+    value: 'github-stargazers-fe'
+
+stages:
+- stage: DeployFE
+  displayName: 'Build & Deploy Static Web App'
+  jobs:
+  - job: DeployJobFE
+    displayName: 'Deploy'
+    steps:
+    - checkout: self
+      submodules: true
+
+    - task: AzureStaticWebApp@0
+      displayName: 'Static Deploy'
+      inputs:
+        app_location: 'src/frontend'
+        output_location: 'dist'
+        azure_static_web_apps_api_token: $(SWA_TOKEN)

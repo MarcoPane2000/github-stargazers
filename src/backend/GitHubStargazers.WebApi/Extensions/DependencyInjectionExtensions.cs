@@ -30,10 +30,15 @@ public static class DependencyInjectionExtensions
         {
             options.AddDefaultPolicy(policy =>
             {
-                policy.WithOrigins("http://localhost:5173", "https://localhost:5173", "http://192.168.1.60:5173")
-                      .AllowAnyHeader()
-                      .AllowAnyMethod()
-                      .AllowCredentials();
+                policy.WithOrigins(
+                    "http://localhost:5173",
+                    "https://localhost:5173",
+                    "http://192.168.1.60:5173",
+                    "https://calm-tree-0a8923210.7.azurestaticapps.net"
+                )
+                .AllowAnyHeader()
+                .AllowAnyMethod()
+                .AllowCredentials();
             });
         });
 
