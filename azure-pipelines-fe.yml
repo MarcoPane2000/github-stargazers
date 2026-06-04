@@ -1,0 +1,71 @@
+trigger:
+  branches:
+    include:
+      - main
+  paths:
+    include:
+      - src/frontend/*
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+variables:
+  azureWebAppFEName: 'github-stargazers-fe' 
+
+stages:
+- stage: BuildAndTestFE
+  displayName: 'FE: Build and Test'
+  jobs:
+  - job: BuildJobFE
+    displayName: 'Compile React App'
+    steps:
+    - task: NodeTool@0
+      displayName: 'Installa Node.js'
+      inputs:
+        versionSpec: '20.x'
+
+    - script: |
+        cd src/frontend
+        npm ci
+        npm run build
+      displayName: 'NPM Install e Build'
+
+    - task: ArchiveFiles@2
+      displayName: 'Zippa la cartella dist'
+      inputs:
+        rootFolderOrFile: 'src/frontend/dist'
+        includeRootFolder: false
+        archiveType: 'zip'
+        archiveFile: '$(Build.ArtifactStagingDirectory)/frontend.zip'
+        replaceExistingArchive: true
+
+    - task: PublishBuildArtifacts@1
+      displayName: 'Save Artifact FE'
+      inputs:
+        PathtoPublish: '$(Build.ArtifactStagingDirectory)/frontend.zip'
+        ArtifactName: 'fedrop'
+
+- stage: DeployFE
+  displayName: 'FE: Azure Deploy Fase'
+  dependsOn: BuildAndTestFE
+  condition: succeeded()
+  jobs:
+  - job: DeployJobFE
+    displayName: 'Deploy su Azure'
+    steps:
+    - task: DownloadBuildArtifacts@0
+      inputs:
+        buildType: 'current'
+        downloadType: 'single'
+        artifactName: 'fedrop'
+        downloadPath: '$(System.ArtifactsDirectory)'
+        
+    - task: AzureRmWebAppDeployment@5
+      inputs:
+        ConnectionType: 'AzureRM'
+        azureSubscription: 'Azure subscription 1(4057d1da-e109-4ad4-8f44-43cbfbf20647)'
+        appType: 'webAppLinux'
+        WebAppName: '$(azureWebAppFEName)'
+        packageForLinux: '$(System.ArtifactsDirectory)/fedrop/frontend.zip'
+        RuntimeStack: 'NODE|20-lts'
+        DeploymentTypeLinux: 'oneDeploy'
