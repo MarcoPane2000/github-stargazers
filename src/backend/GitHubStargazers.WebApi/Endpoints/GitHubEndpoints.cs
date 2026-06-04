@@ -8,7 +8,7 @@ public static class GitHubEndpoint
 {
     public static void MapGitHubEndpoints(this IEndpointRouteBuilder app)
     {
-        var group = app.MapGroup("/api/stargazers").RequireAuthorization();
+        var group = app.MapGroup("/api/stargazers").RequireAuthorization().RequireCors();
 
         group.MapGet("/users", async (string q, IGitHubService gitHubService) =>
         {

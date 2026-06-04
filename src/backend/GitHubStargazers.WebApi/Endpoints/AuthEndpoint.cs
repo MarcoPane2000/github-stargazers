@@ -8,7 +8,7 @@ public static class AuthEndpoint
 {
     public static void MapAuthEndpoints(this IEndpointRouteBuilder app)
     {
-        var group = app.MapGroup("/api/auth");
+        var group = app.MapGroup("/api/auth").RequireCors();
 
         group.MapPost("/register", async (UserRegistrationRequest request, IAuthService authService, HttpContext httpContext, IHostEnvironment env) =>
         {

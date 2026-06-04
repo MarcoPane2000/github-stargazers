@@ -26,6 +26,17 @@ public static class DependencyInjectionExtensions
         services.AddValidatorsFromAssemblyContaining<Program>();
         services.AddOpenApi();
 
+        services.AddCors(options =>
+        {
+            options.AddDefaultPolicy(policy =>
+            {
+                policy.WithOrigins("http://localhost:5173", "https://localhost:5173", "http://192.168.1.60:5173")
+                      .AllowAnyHeader()
+                      .AllowAnyMethod()
+                      .AllowCredentials();
+            });
+        });
+
         return services;
     }
 
@@ -99,17 +110,6 @@ public static class DependencyInjectionExtensions
                 .RequireAuthenticatedUser()
                 .Build());
 
-        services.AddCors(options =>
-        {
-            options.AddPolicy("AllowAngularApp", policy =>
-            {
-                policy.WithOrigins("http://localhost:5173")
-                      .AllowAnyHeader()
-                      .AllowAnyMethod()
-                      .AllowCredentials();
-            });
-        });
-
         return services;
     }
 
@@ -117,9 +117,9 @@ public static class DependencyInjectionExtensions
     {
         app.UseExceptionHandler();
 
-        app.UseHttpsRedirection();
+        app.UseCors();
 
-        app.UseCors("AllowAngularApp");
+        // app.UseHttpsRedirection();
 
         app.UseAuthentication();
 

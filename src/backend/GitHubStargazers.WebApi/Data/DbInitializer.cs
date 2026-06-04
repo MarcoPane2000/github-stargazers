@@ -7,7 +7,9 @@ public static class DbInitializer
 {
     public static void Initialize(DataContext context, IConfiguration configuration)
     {
-        context.Database.Migrate();
+        // context.Database.Migrate();
+
+        context.Database.EnsureCreated();
 
         if (context.Users.Any())
         {
