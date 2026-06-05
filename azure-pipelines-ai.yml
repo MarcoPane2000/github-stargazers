@@ -1,0 +1,92 @@
+trigger:
+  branches:
+    include:
+      - main
+  paths:
+    include:
+      - src/ai-services/*
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+variables:
+  acrName: 'githubstargazersregistry'
+  resourceGroup: 'github-stargazers'
+  serviceConnection: 'Azure subscription 1(4057d1da-e109-4ad4-8f44-43cbfbf20647)'
+
+stages:
+- stage: BuildAndPush
+  displayName: 'Build e Push Images'
+  jobs:
+  - job: BuildImages
+    steps:
+    # Build Ollama
+    - task: Docker@2
+      displayName: 'Build & Push Ollama'
+      inputs:
+        containerRegistryType: 'Azure Resource Manager'
+        containerRegistry: '$(serviceConnection)'
+        azureContainerRegistry: '$(acrName).azurecr.io'
+        repository: 'ollama-ai'
+        command: 'buildAndPush'
+        dockerfile: 'src/ai/ollama/Dockerfile'
+        tags: 'latest'
+
+    # Build Qdrant
+    - task: Docker@2
+      displayName: 'Build & Push Qdrant'
+      inputs:
+        containerRegistryType: 'Azure Resource Manager'
+        containerRegistry: '$(serviceConnection)'
+        azureContainerRegistry: '$(acrName).azurecr.io'
+        repository: 'qdrant-db'
+        command: 'buildAndPush'
+        dockerfile: 'src/ai/qdrant/Dockerfile'
+        tags: 'latest'
+
+- stage: DeployToAzure
+  displayName: 'Deploy Container Instances'
+  dependsOn: BuildAndPush
+  condition: succeeded()
+  jobs:
+  - job: DeployACI
+    steps:
+    # Deploy Ollama
+    - task: AzureCLI@2
+      displayName: 'Deploy Container Ollama'
+      inputs:
+        azureSubscription: '$(serviceConnection)'
+        scriptType: 'bash'
+        scriptLocation: 'inlineScript'
+        inlineScript: |
+          az container create \
+            --resource-group $(resourceGroup) \
+            --name github-stargazers-ollama \
+            --image $(acrName).azurecr.io/ollama-ai:latest \
+            --cpu 1 \
+            --memory 2.0 \
+            --ports 11434 \
+            --dns-name-label stargazers-ollama-api \
+            --registry-login-server $(acrName).azurecr.io \
+            --registry-username $(az acr credentials show --name $(acrName) --query username -o tsv) \
+            --registry-password $(az acr credentials show --name $(acrName) --query passwords[0].value -o tsv)
+
+    # Deploy Qdrant
+    - task: AzureCLI@2
+      displayName: 'Deploy Container Qdrant'
+      inputs:
+        azureSubscription: '$(serviceConnection)'
+        scriptType: 'bash'
+        scriptLocation: 'inlineScript'
+        inlineScript: |
+          az container create \
+            --resource-group $(resourceGroup) \
+            --name github-stargazers-qdrant \
+            --image $(acrName).azurecr.io/qdrant-db:latest \
+            --cpu 1 \
+            --memory 1.5 \
+            --ports 6333 \
+            --dns-name-label stargazers-qdrant-db \
+            --registry-login-server $(acrName).azurecr.io \
+            --registry-username $(az acr credentials show --name $(acrName) --query username -o tsv) \
+            --registry-password $(az acr credentials show --name $(acrName) --query passwords[0].value -o tsv)
